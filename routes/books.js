@@ -3,6 +3,15 @@ const router = express.Router();
 const Book = require('../models/book');
 const Author = require('../models/author');
 
+const imageMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  "jpeg",
+  "png",
+  "gif"
+];
+
 //All Books route
 router.get('/', async (req, res) => {
   let query = Book.find();
@@ -16,7 +25,7 @@ router.get('/', async (req, res) => {
     query = query.gte('publishDate', req.query.publishedAfter);
   }
   try {
-    const books = await Book.exec();
+    const books = await query.exec();
     res.render('books/index', {
       books: books,
       searchOptions: req.query,
@@ -40,19 +49,19 @@ router.post('/', async (req, res) => {
     pageCount: req.body.pageCount,
     description: req.body.description,
   });
-  console.log("outside try")
+  console.log(req.body)
   try {
     saveCover(book, req.body.cover);
-    console.log("inside try")
     // res.redirect('books/${newBook.id}');
     res.redirect('books');
-  } catch {
+  } catch (err) {
+    console.log(err);
     renderNewPage(res, book, true);
   }
 });
 
 function saveCover(book, coverEncoded) {
-  if (coverEncoded == null) return;
+  if (!coverEncoded) return;
   const cover = JSON.parse(coverEncoded);
   if (cover != null && imageMimeTypes.includes(cover.type)) {
     book.coverImage = new Buffer.from(cover.data, 'base64');
